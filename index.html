@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simplex Method Solver</title>
+    <title>Simplex Method Solver with Graph</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.6.4/math.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        .container { max-width: 600px; margin: auto; }
+        .container { max-width: 700px; margin: auto; }
         .input-group { margin-bottom: 10px; display: flex; align-items: center; }
         .input-group input { margin-right: 5px; width: 80px; }
         button { margin: 5px; }
+        #graph { width: 100%; height: 400px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Simplex Method Solver</h2>
+        <h2>Simplex Method Solver with Graph</h2>
         <div class="input-group">
             <label>Objective Function: Max Z = </label>
             <input type="number" id="a" placeholder="a"> * x1 +
@@ -27,6 +29,8 @@
         <button onclick="solveSimplex()">Solve</button>
         <h3>Result:</h3>
         <p id="result"></p>
+        <h3>Graph:</h3>
+        <div id="graph"></div>
     </div>
 
     <script>
@@ -38,16 +42,16 @@
                 <input type="number" placeholder="s"> <button onclick="removeConstraint(this)">Remove</button>`;
             document.getElementById("constraints").appendChild(div);
         }
-        
+
         function removeConstraint(button) {
             button.parentElement.remove();
         }
-        
+
         function solveSimplex() {
             const a = parseFloat(document.getElementById("a").value) || 0;
             const b = parseFloat(document.getElementById("b").value) || 0;
             const constraints = document.querySelectorAll("#constraints .input-group");
-            
+
             let A = [], bVec = [];
             constraints.forEach(row => {
                 const inputs = row.querySelectorAll("input");
@@ -57,36 +61,55 @@
                 A.push([c, d]);
                 bVec.push(s);
             });
-            
+
             const solution = simplexMethod(A, bVec, [a, b]);
-            document.getElementById("result").innerText = solution;
+            document.getElementById("result").innerText = solution.text;
+            drawGraph(A, bVec, solution.x1, solution.x2);
         }
-        
+
         function simplexMethod(A, b, obj) {
-            let numVars = obj.length;
+            let solutions = [];
             let numConstraints = A.length;
-            
-            let tableau = [];
+
             for (let i = 0; i < numConstraints; i++) {
-                tableau.push([...A[i], 1, b[i]]);
-            }
-            tableau.push([...obj, 0, 0]);
-            
-            // Ітерації методу (простий підхід, поки що без повного симплексу)
-            let x1 = 0, x2 = 0, maxZ = 0;
-            for (let i = 0; i < numConstraints; i++) {
-                let x1_temp = b[i] / (A[i][0] || 1);
-                let x2_temp = b[i] / (A[i][1] || 1);
-                if (x1_temp >= 0 && x2_temp >= 0) {
-                    let z = obj[0] * x1_temp + obj[1] * x2_temp;
-                    if (z > maxZ) {
-                        maxZ = z;
-                        x1 = x1_temp;
-                        x2 = x2_temp;
+                for (let j = i + 1; j < numConstraints; j++) {
+                    let det = A[i][0] * A[j][1] - A[i][1] * A[j][0];
+                    if (det === 0) continue;
+
+                    let x1 = (b[i] * A[j][1] - b[j] * A[i][1]) / det;
+                    let x2 = (A[i][0] * b[j] - A[j][0] * b[i]) / det;
+
+                    if (x1 >= 0 && x2 >= 0) {
+                        solutions.push({ x1, x2, z: obj[0] * x1 + obj[1] * x2 });
                     }
                 }
             }
-            return `Optimal solution: x1 = ${x1.toFixed(2)}, x2 = ${x2.toFixed(2)}, Max Z = ${maxZ.toFixed(2)}`;
+
+            if (solutions.length === 0) return { text: "No feasible solution", x1: null, x2: null };
+
+            let optimal = solutions.reduce((best, curr) => (curr.z > best.z ? curr : best), solutions[0]);
+            return { text: `Optimal solution: x1 = ${optimal.x1.toFixed(2)}, x2 = ${optimal.x2.toFixed(2)}, Max Z = ${optimal.z.toFixed(2)}`, x1: optimal.x1, x2: optimal.x2 };
+        }
+
+        function drawGraph(A, b, optX1, optX2) {
+            let traces = [];
+            let xRange = [0, 10];
+
+            A.forEach((coeff, index) => {
+                let x1 = xRange;
+                let x2 = x1.map(x => (b[index] - coeff[0] * x) / (coeff[1] || 1));
+                traces.push({ x: x1, y: x2, mode: 'lines', name: `Constraint ${index + 1}` });
+            });
+
+            if (optX1 !== null && optX2 !== null) {
+                traces.push({
+                    x: [optX1], y: [optX2], mode: 'markers',
+                    marker: { size: 10, color: 'red' },
+                    name: 'Optimal Solution'
+                });
+            }
+
+            Plotly.newPlot('graph', traces, { title: 'Constraints Graph', xaxis: { range: xRange }, yaxis: { range: [0, 10] } });
         }
     </script>
 </body>
