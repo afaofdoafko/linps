@@ -3,46 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linear Programming Solver</title>
+    <title>Simplex Method Solver</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.6.4/math.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .container { max-width: 600px; margin: auto; }
-        .input-group { margin-bottom: 10px; }
-        canvas { border: 1px solid black; }
+        .input-group { margin-bottom: 10px; display: flex; align-items: center; }
+        .input-group input { margin-right: 5px; width: 80px; }
+        button { margin: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Linear Programming Solver (Reddy Mikks)</h2>
+        <h2>Simplex Method Solver</h2>
         <div class="input-group">
             <label>Objective Function: Max Z = </label>
             <input type="number" id="a" placeholder="a"> * x1 +
             <input type="number" id="b" placeholder="b"> * x2
         </div>
         <h3>Constraints</h3>
-        <div id="constraints">
-            <div class="input-group">
-                <input type="number" placeholder="c"> * x1 +
-                <input type="number" placeholder="d"> * x2 <=
-                <input type="number" placeholder="s">
-                <button onclick="removeConstraint(this)">Remove</button>
-            </div>
-        </div>
+        <div id="constraints"></div>
         <button onclick="addConstraint()">Add Constraint</button>
-        <button onclick="solveLP()">Solve</button>
+        <button onclick="solveSimplex()">Solve</button>
         <h3>Result:</h3>
         <p id="result"></p>
-        <canvas id="graph" width="400" height="400"></canvas>
     </div>
 
     <script>
         function addConstraint() {
             const div = document.createElement("div");
             div.classList.add("input-group");
-            div.innerHTML = '<input type="number" placeholder="c"> * x1 +
+            div.innerHTML = `<input type="number" placeholder="c"> * x1 +
                 <input type="number" placeholder="d"> * x2 <=
-                <input type="number" placeholder="s"> <button onclick="removeConstraint(this)">Remove</button>';
+                <input type="number" placeholder="s"> <button onclick="removeConstraint(this)">Remove</button>`;
             document.getElementById("constraints").appendChild(div);
         }
         
@@ -50,7 +43,7 @@
             button.parentElement.remove();
         }
         
-        function solveLP() {
+        function solveSimplex() {
             const a = parseFloat(document.getElementById("a").value) || 0;
             const b = parseFloat(document.getElementById("b").value) || 0;
             const constraints = document.querySelectorAll("#constraints .input-group");
@@ -65,14 +58,23 @@
                 bVec.push(s);
             });
             
-            const solution = simplexSolve(A, bVec, [a, b]);
+            const solution = simplexMethod(A, bVec, [a, b]);
             document.getElementById("result").innerText = solution;
         }
         
-        function simplexSolve(A, b, obj) {
-            // This is a basic feasibility check, actual simplex method should be implemented
+        function simplexMethod(A, b, obj) {
+            let numVars = obj.length;
+            let numConstraints = A.length;
+            
+            let tableau = [];
+            for (let i = 0; i < numConstraints; i++) {
+                tableau.push([...A[i], 1, b[i]]);
+            }
+            tableau.push([...obj, 0, 0]);
+            
+            // Ітерації методу (простий підхід, поки що без повного симплексу)
             let x1 = 0, x2 = 0, maxZ = 0;
-            for (let i = 0; i < b.length; i++) {
+            for (let i = 0; i < numConstraints; i++) {
                 let x1_temp = b[i] / (A[i][0] || 1);
                 let x2_temp = b[i] / (A[i][1] || 1);
                 if (x1_temp >= 0 && x2_temp >= 0) {
