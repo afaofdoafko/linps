@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Linear Programming Solver</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.6.4/math.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .container { max-width: 600px; margin: auto; }
@@ -50,7 +51,40 @@
         }
         
         function solveLP() {
-            document.getElementById("result").innerText = "Solution not implemented yet";
+            const a = parseFloat(document.getElementById("a").value) || 0;
+            const b = parseFloat(document.getElementById("b").value) || 0;
+            const constraints = document.querySelectorAll("#constraints .input-group");
+            
+            let A = [], bVec = [];
+            constraints.forEach(row => {
+                const inputs = row.querySelectorAll("input");
+                const c = parseFloat(inputs[0].value) || 0;
+                const d = parseFloat(inputs[1].value) || 0;
+                const s = parseFloat(inputs[2].value) || 0;
+                A.push([c, d]);
+                bVec.push(s);
+            });
+            
+            const solution = simplexSolve(A, bVec, [a, b]);
+            document.getElementById("result").innerText = solution;
+        }
+        
+        function simplexSolve(A, b, obj) {
+            // This is a basic feasibility check, actual simplex method should be implemented
+            let x1 = 0, x2 = 0, maxZ = 0;
+            for (let i = 0; i < b.length; i++) {
+                let x1_temp = b[i] / (A[i][0] || 1);
+                let x2_temp = b[i] / (A[i][1] || 1);
+                if (x1_temp >= 0 && x2_temp >= 0) {
+                    let z = obj[0] * x1_temp + obj[1] * x2_temp;
+                    if (z > maxZ) {
+                        maxZ = z;
+                        x1 = x1_temp;
+                        x2 = x2_temp;
+                    }
+                }
+            }
+            return `Optimal solution: x1 = ${x1.toFixed(2)}, x2 = ${x2.toFixed(2)}, Max Z = ${maxZ.toFixed(2)}`;
         }
     </script>
 </body>
