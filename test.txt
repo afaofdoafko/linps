@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Programming Solver</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        .input-group { margin-bottom: 10px; }
+        canvas { border: 1px solid black; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Linear Programming Solver (Reddy Mikks)</h2>
+        <div class="input-group">
+            <label>Objective Function: Max Z = </label>
+            <input type="number" id="a" placeholder="a"> * x1 +
+            <input type="number" id="b" placeholder="b"> * x2
+        </div>
+        <h3>Constraints</h3>
+        <div id="constraints">
+            <div class="input-group">
+                <input type="number" placeholder="c"> * x1 +
+                <input type="number" placeholder="d"> * x2 <=
+                <input type="number" placeholder="s">
+                <button onclick="removeConstraint(this)">Remove</button>
+            </div>
+        </div>
+        <button onclick="addConstraint()">Add Constraint</button>
+        <button onclick="solveLP()">Solve</button>
+        <h3>Result:</h3>
+        <p id="result"></p>
+        <canvas id="graph" width="400" height="400"></canvas>
+    </div>
+
+    <script>
+        function addConstraint() {
+            const div = document.createElement("div");
+            div.classList.add("input-group");
+            div.innerHTML = '<input type="number" placeholder="c"> * x1 +
+                <input type="number" placeholder="d"> * x2 <=
+                <input type="number" placeholder="s"> <button onclick="removeConstraint(this)">Remove</button>';
+            document.getElementById("constraints").appendChild(div);
+        }
+        
+        function removeConstraint(button) {
+            button.parentElement.remove();
+        }
+        
+        function solveLP() {
+            document.getElementById("result").innerText = "Solution not implemented yet";
+        }
+    </script>
+</body>
+</html>
